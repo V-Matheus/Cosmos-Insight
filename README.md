@@ -9,6 +9,7 @@ O design foi focado em uma experiência imersiva (Deep Space Dark Mode) e pode s
 
 🔗 [Projeto no Figma / Stich](https://stitch.withgoogle.com/projects/16414900416597747189)
 
+
 ---
 
 ## 🚀 Funcionalidades Principais
