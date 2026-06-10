@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/asteroid.dart';
 import '../theme/cosmos_theme.dart';
 import '../widgets/glass_panel.dart';
+import '../widgets/watchlist_star.dart';
 
 /// Requirement (4): this screen is built entirely from an [Asteroid] received
 /// as the `arguments` of a named route ([AppRoutes.asteroidDetail]).
@@ -26,7 +27,20 @@ class AsteroidDetailScreen extends StatelessWidget {
             onBack: () => Navigator.of(context).pop(),
           ),
           const SizedBox(height: 16),
-          Text(asteroid.designation, style: CosmosTextStyles.displayLg()),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  asteroid.designation,
+                  style: CosmosTextStyles.displayLg(),
+                ),
+              ),
+              // Same shared state as the list card (place #2 reacting): toggling
+              // here updates the card's star and the header counter instantly.
+              WatchlistStar(designation: asteroid.designation, size: 32),
+            ],
+          ),
           const SizedBox(height: 12),
           Row(
             children: [

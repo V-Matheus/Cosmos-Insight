@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/asteroid.dart';
 import '../theme/cosmos_theme.dart';
 import 'glass_panel.dart';
+import 'watchlist_star.dart';
 
 class AsteroidCard extends StatelessWidget {
   const AsteroidCard({
@@ -84,17 +85,24 @@ class AsteroidCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 12),
-                _StatusPill(
-                  label: tokens.label,
-                  dotColor: tokens.dot,
-                  textColor: tokens.text,
-                  borderColor: tokens.border,
-                  fillColor: tokens.fill,
-                  glow: tokens.glow,
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    _StatusPill(
+                      label: tokens.label,
+                      dotColor: tokens.dot,
+                      textColor: tokens.text,
+                      borderColor: tokens.border,
+                      fillColor: tokens.fill,
+                      glow: tokens.glow,
+                    ),
+                    // Consumes the shared WatchlistModel (place #1 reacting).
+                    WatchlistStar(designation: designation),
+                  ],
                 ),
               ],
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 8),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

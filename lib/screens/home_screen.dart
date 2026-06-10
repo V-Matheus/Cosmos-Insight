@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 
 import '../routes/app_routes.dart';
+import '../state/watchlist_model.dart';
 import '../theme/cosmos_theme.dart';
 import '../widgets/cosmos_bottom_nav.dart';
 import '../widgets/cosmos_drawer.dart';
@@ -160,6 +162,8 @@ class _ShellHeader extends StatelessWidget {
             ),
           ),
           const Spacer(),
+          const _WatchlistBadge(),
+          const SizedBox(width: 16),
           Container(
             width: 6,
             height: 6,
@@ -184,6 +188,42 @@ class _ShellHeader extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Watchlist counter shown in the shell header. This widget lives in a totally
+/// different part of the tree from the AsteroidCards, yet reacts to the SAME
+/// shared state (requirement 3). It consumes via `context.watch`, the second
+/// consumption mechanism alongside the cards' `Consumer`.
+class _WatchlistBadge extends StatelessWidget {
+  const _WatchlistBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    final count = context.watch<WatchlistModel>().count;
+    final active = count > 0;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          active ? Icons.star : Icons.star_border,
+          size: 16,
+          color: active
+              ? CosmosColors.primaryContainer
+              : CosmosColors.onSurfaceVariant,
+        ),
+        const SizedBox(width: 6),
+        Text(
+          '$count',
+          style: CosmosTextStyles.labelCaps(
+            color: active
+                ? CosmosColors.primaryContainer
+                : CosmosColors.onSurfaceVariant,
+            letterSpacing: 1.2,
+          ),
+        ),
+      ],
     );
   }
 }
