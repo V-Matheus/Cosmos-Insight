@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../models/asteroid.dart';
 import '../theme/cosmos_theme.dart';
 import 'glass_panel.dart';
-
-enum AsteroidStatus { closeApproach, monitoring, nominal }
 
 class AsteroidCard extends StatelessWidget {
   const AsteroidCard({
@@ -13,6 +12,7 @@ class AsteroidCard extends StatelessWidget {
     required this.velocity,
     required this.diameter,
     required this.missDistance,
+    this.onTap,
   });
 
   final String designation;
@@ -20,9 +20,10 @@ class AsteroidCard extends StatelessWidget {
   final String velocity;
   final String diameter;
   final String missDistance;
+  final VoidCallback? onTap;
 
   ({Color dot, Color text, Color border, Color fill, String label, bool glow})
-      get _statusTokens {
+  get _statusTokens {
     switch (status) {
       case AsteroidStatus.closeApproach:
         return (
@@ -57,111 +58,117 @@ class AsteroidCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tokens = _statusTokens;
-    return GlassPanel(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'DESIGNATION',
-                      style: CosmosTextStyles.labelCaps(
-                        color: CosmosColors.onSurfaceVariant,
-                        letterSpacing: 1.6,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(designation, style: CosmosTextStyles.headlineMd()),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              _StatusPill(
-                label: tokens.label,
-                dotColor: tokens.dot,
-                textColor: tokens.text,
-                borderColor: tokens.border,
-                fillColor: tokens.fill,
-                glow: tokens.glow,
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: _Stat(
-                  icon: Icons.speed_outlined,
-                  label: 'VELOCITY',
-                  value: velocity,
-                  valueColor: CosmosColors.primary,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _Stat(
-                  icon: Icons.open_in_full,
-                  label: 'EST. DIA.',
-                  value: diameter,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          Container(
-            padding: const EdgeInsets.only(top: 16),
-            decoration: const BoxDecoration(
-              border: Border(
-                top: BorderSide(color: CosmosColors.hairline, width: 1),
-              ),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
+    return GestureDetector(
+      onTap: onTap,
+      child: GlassPanel(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: RichText(
-                    text: TextSpan(
-                      children: [
-                        TextSpan(
-                          text: 'Miss Distance: ',
-                          style: CosmosTextStyles.bodySm(
-                            color: CosmosColors.onSurfaceVariant,
-                          ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'DESIGNATION',
+                        style: CosmosTextStyles.labelCaps(
+                          color: CosmosColors.onSurfaceVariant,
+                          letterSpacing: 1.6,
                         ),
-                        TextSpan(
-                          text: missDistance,
-                          style: CosmosTextStyles.dataMono(),
-                        ),
-                      ],
-                    ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(designation, style: CosmosTextStyles.headlineMd()),
+                    ],
                   ),
                 ),
-                const SizedBox(width: 8),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'TRAJECTORY',
-                      style: CosmosTextStyles.labelCaps(
-                        color: CosmosColors.primary,
-                        letterSpacing: 1.4,
-                      ),
-                    ),
-                    const SizedBox(width: 2),
-                    const Icon(Icons.chevron_right,
-                        color: CosmosColors.primary, size: 16),
-                  ],
+                const SizedBox(width: 12),
+                _StatusPill(
+                  label: tokens.label,
+                  dotColor: tokens.dot,
+                  textColor: tokens.text,
+                  borderColor: tokens.border,
+                  fillColor: tokens.fill,
+                  glow: tokens.glow,
                 ),
               ],
             ),
-          ),
-        ],
+            const SizedBox(height: 24),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: _Stat(
+                    icon: Icons.speed_outlined,
+                    label: 'VELOCITY',
+                    value: velocity,
+                    valueColor: CosmosColors.primary,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _Stat(
+                    icon: Icons.open_in_full,
+                    label: 'EST. DIA.',
+                    value: diameter,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            Container(
+              padding: const EdgeInsets.only(top: 16),
+              decoration: const BoxDecoration(
+                border: Border(
+                  top: BorderSide(color: CosmosColors.hairline, width: 1),
+                ),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: RichText(
+                      text: TextSpan(
+                        children: [
+                          TextSpan(
+                            text: 'Miss Distance: ',
+                            style: CosmosTextStyles.bodySm(
+                              color: CosmosColors.onSurfaceVariant,
+                            ),
+                          ),
+                          TextSpan(
+                            text: missDistance,
+                            style: CosmosTextStyles.dataMono(),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'TRAJECTORY',
+                        style: CosmosTextStyles.labelCaps(
+                          color: CosmosColors.primary,
+                          letterSpacing: 1.4,
+                        ),
+                      ),
+                      const SizedBox(width: 2),
+                      const Icon(
+                        Icons.chevron_right,
+                        color: CosmosColors.primary,
+                        size: 16,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

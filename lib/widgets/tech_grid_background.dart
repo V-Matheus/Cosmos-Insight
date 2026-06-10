@@ -9,9 +9,7 @@ class TechGridBackground extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        Positioned.fill(
-          child: CustomPaint(painter: _GridPainter()),
-        ),
+        Positioned.fill(child: CustomPaint(painter: _GridPainter())),
         child,
       ],
     );

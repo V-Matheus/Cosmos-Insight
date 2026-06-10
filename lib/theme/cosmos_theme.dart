@@ -41,41 +41,41 @@ class CosmosTheme {
 
 class CosmosTextStyles {
   static TextStyle displayLg({Color? color}) => GoogleFonts.inter(
-        fontSize: 48,
-        height: 1.1,
-        letterSpacing: -0.96,
-        fontWeight: FontWeight.w700,
-        color: color ?? CosmosColors.onSurface,
-      );
+    fontSize: 48,
+    height: 1.1,
+    letterSpacing: -0.96,
+    fontWeight: FontWeight.w700,
+    color: color ?? CosmosColors.onSurface,
+  );
 
   static TextStyle headlineMd({Color? color}) => GoogleFonts.inter(
-        fontSize: 24,
-        height: 1.3,
-        fontWeight: FontWeight.w600,
-        color: color ?? CosmosColors.onSurface,
-      );
+    fontSize: 24,
+    height: 1.3,
+    fontWeight: FontWeight.w600,
+    color: color ?? CosmosColors.onSurface,
+  );
 
   static TextStyle bodyMd({Color? color}) => GoogleFonts.inter(
-        fontSize: 16,
-        height: 1.6,
-        fontWeight: FontWeight.w400,
-        color: color ?? CosmosColors.onSurface,
-      );
+    fontSize: 16,
+    height: 1.6,
+    fontWeight: FontWeight.w400,
+    color: color ?? CosmosColors.onSurface,
+  );
 
   static TextStyle bodySm({Color? color}) => GoogleFonts.inter(
-        fontSize: 14,
-        height: 1.4,
-        fontWeight: FontWeight.w400,
-        color: color ?? CosmosColors.onSurface,
-      );
+    fontSize: 14,
+    height: 1.4,
+    fontWeight: FontWeight.w400,
+    color: color ?? CosmosColors.onSurface,
+  );
 
   static TextStyle dataMono({Color? color}) => GoogleFonts.spaceGrotesk(
-        fontSize: 14,
-        height: 1.2,
-        letterSpacing: 0.7,
-        fontWeight: FontWeight.w500,
-        color: color ?? CosmosColors.onSurface,
-      );
+    fontSize: 14,
+    height: 1.2,
+    letterSpacing: 0.7,
+    fontWeight: FontWeight.w500,
+    color: color ?? CosmosColors.onSurface,
+  );
 
   static TextStyle labelCaps({Color? color, double letterSpacing = 0}) =>
       GoogleFonts.spaceGrotesk(

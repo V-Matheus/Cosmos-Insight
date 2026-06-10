@@ -200,7 +200,8 @@ class _TelescopeScreenState extends State<TelescopeScreen> {
     final seed = date.codeUnits.fold<int>(0, (a, b) => a + b);
     final rng = math.Random(seed);
 
-    final indices = List<int>.generate(_catalogue.length, (i) => i)..shuffle(rng);
+    final indices = List<int>.generate(_catalogue.length, (i) => i)
+      ..shuffle(rng);
     final count = 3 + rng.nextInt(3); // 3..5 results
     final picks = indices.take(count).toList();
 
@@ -211,12 +212,16 @@ class _TelescopeScreenState extends State<TelescopeScreen> {
         id: '${seed.designation}-$date',
         designation: seed.designation,
         diameterMeters: (seed.diameterMeters * jitter).round(),
-        velocityKps: double.parse((seed.velocityKps * jitter).toStringAsFixed(2)),
-        missDistanceAu:
-            double.parse((seed.missDistanceAu * jitter).toStringAsFixed(5)),
+        velocityKps: double.parse(
+          (seed.velocityKps * jitter).toStringAsFixed(2),
+        ),
+        missDistanceAu: double.parse(
+          (seed.missDistanceAu * jitter).toStringAsFixed(5),
+        ),
         magnitude: seed.magnitude,
         hazardous: seed.hazardous,
-        approachTime: '${10 + rng.nextInt(13)}:${rng.nextInt(60).toString().padLeft(2, '0')} UTC',
+        approachTime:
+            '${10 + rng.nextInt(13)}:${rng.nextInt(60).toString().padLeft(2, '0')} UTC',
       );
     }).toList();
   }
@@ -237,9 +242,7 @@ class _TelescopeScreenState extends State<TelescopeScreen> {
               ),
             ),
           ),
-          Expanded(
-            child: Text(value, style: CosmosTextStyles.dataMono()),
-          ),
+          Expanded(child: Text(value, style: CosmosTextStyles.dataMono())),
         ],
       ),
     );
@@ -255,9 +258,7 @@ class _TelescopeScreenState extends State<TelescopeScreen> {
         Text(
           "Query the Near-Earth Object catalog by date. Tap a result to "
           "expand details, hold to flag it for review.",
-          style: CosmosTextStyles.bodyMd(
-            color: CosmosColors.onSurfaceVariant,
-          ),
+          style: CosmosTextStyles.bodyMd(color: CosmosColors.onSurfaceVariant),
         ),
         const SizedBox(height: 28),
         _QueryPanel(
@@ -440,17 +441,18 @@ class _QueryPanel extends StatelessWidget {
             cursorColor: CosmosColors.primaryContainer,
             decoration: InputDecoration(
               hintText: 'YYYY-MM-DD',
-              hintStyle: CosmosTextStyles.dataMono(
-                color: CosmosColors.outline,
-              ),
+              hintStyle: CosmosTextStyles.dataMono(color: CosmosColors.outline),
               filled: true,
               fillColor: CosmosColors.surfaceContainerLow,
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 14,
+              ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(6),
-                borderSide:
-                    const BorderSide(color: CosmosColors.outlineVariant),
+                borderSide: const BorderSide(
+                  color: CosmosColors.outlineVariant,
+                ),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(6),
@@ -508,8 +510,7 @@ class _ValidationDot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color =
-        valid ? CosmosColors.primaryContainer : CosmosColors.outline;
+    final color = valid ? CosmosColors.primaryContainer : CosmosColors.outline;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -532,10 +533,7 @@ class _ValidationDot extends StatelessWidget {
         const SizedBox(width: 8),
         Text(
           valid ? 'VALID' : 'WAITING',
-          style: CosmosTextStyles.labelCaps(
-            color: color,
-            letterSpacing: 1.4,
-          ),
+          style: CosmosTextStyles.labelCaps(color: color, letterSpacing: 1.4),
         ),
       ],
     );
@@ -562,18 +560,18 @@ class _ActionButton extends StatelessWidget {
     final fg = !enabled
         ? CosmosColors.outline
         : primary
-            ? CosmosColors.background
-            : CosmosColors.primaryContainer;
+        ? CosmosColors.background
+        : CosmosColors.primaryContainer;
     final bg = !enabled
         ? CosmosColors.surfaceContainerLow
         : primary
-            ? CosmosColors.primaryContainer
-            : Colors.transparent;
+        ? CosmosColors.primaryContainer
+        : Colors.transparent;
     final border = primary
         ? Colors.transparent
         : (enabled
-            ? CosmosColors.primaryContainer.withValues(alpha: 0.6)
-            : CosmosColors.outlineVariant);
+              ? CosmosColors.primaryContainer.withValues(alpha: 0.6)
+              : CosmosColors.outlineVariant);
 
     return Material(
       color: bg,
@@ -648,9 +646,7 @@ class _EmptyState extends StatelessWidget {
       child: Column(
         children: [
           Icon(
-            queriedDate == null
-                ? Icons.search_outlined
-                : Icons.inbox_outlined,
+            queriedDate == null ? Icons.search_outlined : Icons.inbox_outlined,
             color: CosmosColors.outline,
             size: 36,
           ),
@@ -695,9 +691,7 @@ class _ResultsHeader extends StatelessWidget {
         const Spacer(),
         Text(
           '$count objects · $hazardous hazardous',
-          style: CosmosTextStyles.bodySm(
-            color: CosmosColors.onSurfaceVariant,
-          ),
+          style: CosmosTextStyles.bodySm(color: CosmosColors.onSurfaceVariant),
         ),
       ],
     );
@@ -759,8 +753,10 @@ class _NeoResultCard extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 6),
-                        Text(neo.designation,
-                            style: CosmosTextStyles.headlineMd()),
+                        Text(
+                          neo.designation,
+                          style: CosmosTextStyles.headlineMd(),
+                        ),
                       ],
                     ),
                   ),
@@ -808,7 +804,8 @@ class _NeoResultCard extends StatelessWidget {
                               ),
                             ),
                             TextSpan(
-                              text: '${neo.missDistanceAu.toStringAsFixed(5)} AU',
+                              text:
+                                  '${neo.missDistanceAu.toStringAsFixed(5)} AU',
                               style: CosmosTextStyles.dataMono(),
                             ),
                           ],
@@ -816,9 +813,7 @@ class _NeoResultCard extends StatelessWidget {
                       ),
                     ),
                     Icon(
-                      expanded
-                          ? Icons.expand_less
-                          : Icons.expand_more,
+                      expanded ? Icons.expand_less : Icons.expand_more,
                       color: CosmosColors.primary,
                       size: 18,
                     ),
@@ -840,10 +835,7 @@ class _NeoResultCard extends StatelessWidget {
                         label: 'MAGNITUDE',
                         value: neo.magnitude.toStringAsFixed(1),
                       ),
-                      _ExpandedRow(
-                        label: 'APPROACH',
-                        value: neo.approachTime,
-                      ),
+                      _ExpandedRow(label: 'APPROACH', value: neo.approachTime),
                       if (flagged)
                         _ExpandedRow(
                           label: 'STATUS',
@@ -859,9 +851,7 @@ class _NeoResultCard extends StatelessWidget {
                 expanded
                     ? 'tap to collapse · hold to ${flagged ? 'unflag' : 'flag'}'
                     : 'tap to expand · hold to ${flagged ? 'unflag' : 'flag'}',
-                style: CosmosTextStyles.bodySm(
-                  color: CosmosColors.outline,
-                ),
+                style: CosmosTextStyles.bodySm(color: CosmosColors.outline),
               ),
             ],
           ),
@@ -987,10 +977,7 @@ class _HazardPill extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             hazardous ? 'HAZARDOUS' : 'NOMINAL',
-            style: CosmosTextStyles.labelCaps(
-              color: color,
-              letterSpacing: 1.0,
-            ),
+            style: CosmosTextStyles.labelCaps(color: color, letterSpacing: 1.0),
           ),
         ],
       ),

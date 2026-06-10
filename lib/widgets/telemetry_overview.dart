@@ -23,8 +23,9 @@ class TelemetryOverview extends StatelessWidget {
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: CosmosColors.primaryContainer
-                          .withValues(alpha: 0.8),
+                      color: CosmosColors.primaryContainer.withValues(
+                        alpha: 0.8,
+                      ),
                       blurRadius: 10,
                     ),
                   ],
@@ -91,8 +92,9 @@ class _Metric extends StatelessWidget {
         const SizedBox(height: 6),
         Text(
           value,
-          style: CosmosTextStyles.dataMono(color: valueColor)
-              .copyWith(fontSize: 20),
+          style: CosmosTextStyles.dataMono(
+            color: valueColor,
+          ).copyWith(fontSize: 20),
         ),
       ],
     );

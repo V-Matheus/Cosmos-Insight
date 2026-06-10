@@ -107,8 +107,9 @@ class _NavItem extends StatelessWidget {
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: CosmosColors.primaryContainer
-                          .withValues(alpha: 0.6),
+                      color: CosmosColors.primaryContainer.withValues(
+                        alpha: 0.6,
+                      ),
                       blurRadius: 10,
                     ),
                   ],
