@@ -7,6 +7,8 @@ import '../state/watchlist_model.dart';
 import '../theme/cosmos_theme.dart';
 import '../widgets/cosmos_bottom_nav.dart';
 import '../widgets/cosmos_drawer.dart';
+import '../widgets/cosmos_nav_rail.dart';
+import '../widgets/responsive_layout.dart';
 import '../widgets/tech_grid_background.dart';
 
 /// The application shell: it owns the [Drawer] and the [BottomNavigationBar],
@@ -70,6 +72,45 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  // The shared tab content (one live navigator per tab). Built once and reused
+  // by both the mobile and the desktop layout — the navigator GlobalKeys keep
+  // each tab's history alive regardless of which chrome wraps it.
+  Widget get _tabStack => IndexedStack(
+    index: _activeIndex,
+    children: [
+      for (var i = 0; i < _tabRoots.length; i++)
+        _TabNavigator(navigatorKey: _navKeys[i], rootRoute: _tabRoots[i]),
+    ],
+  );
+
+  Widget _header() =>
+      _ShellHeader(onMenu: () => _scaffoldKey.currentState?.openDrawer());
+
+  /// Phones: header on top, content in the middle, bottom navigation bar below.
+  Widget _mobileLayout(BuildContext context) {
+    return Column(
+      children: [
+        _header(),
+        Expanded(child: _tabStack),
+        CosmosBottomNav(activeIndex: _activeIndex, onTap: _onTabTapped),
+      ],
+    );
+  }
+
+  /// Tablets / desktop: a vertical navigation rail on the side, content beside it.
+  Widget _desktopLayout(BuildContext context) {
+    return Row(
+      children: [
+        CosmosNavRail(activeIndex: _activeIndex, onTap: _onTabTapped),
+        Expanded(
+          child: Column(
+            children: [_header(), Expanded(child: _tabStack)],
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -79,34 +120,16 @@ class _HomeScreenState extends State<HomeScreen> {
         key: _scaffoldKey,
         backgroundColor: CosmosColors.background,
         drawer: const CosmosDrawer(),
-        extendBody: true,
         body: TechGridBackground(
           child: SafeArea(
             bottom: false,
-            child: Column(
-              children: [
-                _ShellHeader(
-                  onMenu: () => _scaffoldKey.currentState?.openDrawer(),
-                ),
-                Expanded(
-                  child: IndexedStack(
-                    index: _activeIndex,
-                    children: [
-                      for (var i = 0; i < _tabRoots.length; i++)
-                        _TabNavigator(
-                          navigatorKey: _navKeys[i],
-                          rootRoute: _tabRoots[i],
-                        ),
-                    ],
-                  ),
-                ),
-              ],
+            // The actual layout switch: < 600px → mobile chrome (bottom nav),
+            // >= 600px → desktop chrome (side rail).
+            child: ResponsiveLayout(
+              mobile: _mobileLayout,
+              desktop: _desktopLayout,
             ),
           ),
-        ),
-        bottomNavigationBar: CosmosBottomNav(
-          activeIndex: _activeIndex,
-          onTap: _onTabTapped,
         ),
       ),
     );

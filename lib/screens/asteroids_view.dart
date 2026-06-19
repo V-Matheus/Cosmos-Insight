@@ -50,9 +50,23 @@ class _AsteroidsViewState extends State<AsteroidsView> {
     setState(() => _filter = result.status);
   }
 
+  /// Number of card columns to render, derived from the available screen
+  /// width via [MediaQuery]. Phones stay single-column; tablets and wider
+  /// landscape/desktop viewports spread the cards across 2–3 columns.
+  int _columnsFor(double width) {
+    if (width >= 1100) return 3;
+    if (width >= 700) return 2;
+    return 1;
+  }
+
   @override
   Widget build(BuildContext context) {
     final visible = _visible;
+    // MediaQuery drives the responsive layout: the number of columns reacts
+    // to the current viewport width (and re-runs on rotation / window resize).
+    final width = MediaQuery.sizeOf(context).width;
+    final columns = _columnsFor(width);
+
     return ListView(
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
       children: [
@@ -83,19 +97,45 @@ class _AsteroidsViewState extends State<AsteroidsView> {
             ),
           )
         else
-          for (final asteroid in visible) ...[
-            AsteroidCard(
-              designation: asteroid.designation,
-              status: asteroid.status,
-              velocity: asteroid.velocity,
-              diameter: asteroid.diameter,
-              missDistance: asteroid.missDistance,
-              onTap: () => _openDetail(asteroid),
-            ),
-            const SizedBox(height: 16),
-          ],
+          ..._buildCardRows(visible, columns),
       ],
     );
+  }
+
+  /// Lays the visible asteroids out in rows of [columns] cards each. With a
+  /// single column this is equivalent to the original stacked list; with more
+  /// columns each row is an even split of [Expanded] cards, padding the final
+  /// row with empty slots so the cards keep a consistent width.
+  List<Widget> _buildCardRows(List<Asteroid> visible, int columns) {
+    final rows = <Widget>[];
+    for (var i = 0; i < visible.length; i += columns) {
+      final slice = visible.skip(i).take(columns).toList();
+      rows.add(
+        Row(
+          // Cards size to their natural height; align rows from the top.
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (var c = 0; c < columns; c++) ...[
+              if (c > 0) const SizedBox(width: 16),
+              Expanded(
+                child: c < slice.length
+                    ? AsteroidCard(
+                        designation: slice[c].designation,
+                        status: slice[c].status,
+                        velocity: slice[c].velocity,
+                        diameter: slice[c].diameter,
+                        missDistance: slice[c].missDistance,
+                        onTap: () => _openDetail(slice[c]),
+                      )
+                    : const SizedBox.shrink(),
+              ),
+            ],
+          ],
+        ),
+      );
+      rows.add(const SizedBox(height: 16));
+    }
+    return rows;
   }
 }
 
