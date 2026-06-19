@@ -3,6 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../models/asteroid.dart';
+import '../services/neo_service.dart';
 import '../theme/cosmos_theme.dart';
 import '../widgets/glass_panel.dart';
 
@@ -16,13 +18,14 @@ class TelescopeScreen extends StatefulWidget {
 class _TelescopeScreenState extends State<TelescopeScreen> {
   final TextEditingController _controller = TextEditingController();
   final FocusNode _focusNode = FocusNode();
+  final NeoService _service = NeoService();
 
   static final RegExp _dateRegex = RegExp(r'^\d{4}-\d{2}-\d{2}$');
 
   bool _isValid = false;
   bool _isLoading = false;
   String? _queriedDate;
-  List<_NeoMock> _results = const [];
+  List<Asteroid> _results = const [];
   final Set<String> _flagged = <String>{};
   final Set<String> _expanded = <String>{};
 
@@ -30,6 +33,7 @@ class _TelescopeScreenState extends State<TelescopeScreen> {
   void dispose() {
     _controller.dispose();
     _focusNode.dispose();
+    _service.dispose();
     super.dispose();
   }
 
@@ -77,16 +81,48 @@ class _TelescopeScreenState extends State<TelescopeScreen> {
         ),
       );
 
-    // Encadeamento: ao final da "consulta", popula os resultados e abre o AlertDialog.
-    await Future<void>.delayed(const Duration(milliseconds: 1000));
+    // Hits NASA's NeoWs feed for the date, then chains into the summary dialog.
+    List<Asteroid> results;
+    try {
+      results = await _service.feed(date);
+    } on Object catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _queriedDate = date;
+        _results = const [];
+      });
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: CosmosColors.surfaceContainer,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      return;
+    }
     if (!mounted) return;
 
-    final results = _mockFeed(date);
     setState(() {
       _isLoading = false;
       _queriedDate = date;
       _results = results;
     });
+
+    if (results.isEmpty) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text('No near-Earth objects reported for $date.'),
+            backgroundColor: CosmosColors.surfaceContainer,
+            duration: const Duration(milliseconds: 1400),
+          ),
+        );
+      return;
+    }
 
     final hazardous = results.where((r) => r.hazardous).length;
     final closest = results
@@ -159,7 +195,7 @@ class _TelescopeScreenState extends State<TelescopeScreen> {
   }
 
   // ---------- Gesture: tap card = toggle expand ----------
-  void _onCardTap(_NeoMock neo) {
+  void _onCardTap(Asteroid neo) {
     debugPrint('[neo-feed] card tap: ${neo.designation}');
     setState(() {
       if (_expanded.contains(neo.id)) {
@@ -171,7 +207,7 @@ class _TelescopeScreenState extends State<TelescopeScreen> {
   }
 
   // ---------- Gesture: long-press card = toggle flag ----------
-  void _onCardLongPress(_NeoMock neo) {
+  void _onCardLongPress(Asteroid neo) {
     debugPrint('[neo-feed] card long-press: ${neo.designation}');
     final wasFlagged = _flagged.contains(neo.id);
     setState(() {
@@ -194,36 +230,6 @@ class _TelescopeScreenState extends State<TelescopeScreen> {
           duration: const Duration(milliseconds: 1100),
         ),
       );
-  }
-
-  List<_NeoMock> _mockFeed(String date) {
-    final seed = date.codeUnits.fold<int>(0, (a, b) => a + b);
-    final rng = math.Random(seed);
-
-    final indices = List<int>.generate(_catalogue.length, (i) => i)
-      ..shuffle(rng);
-    final count = 3 + rng.nextInt(3); // 3..5 results
-    final picks = indices.take(count).toList();
-
-    return picks.map((i) {
-      final seed = _catalogue[i];
-      final jitter = 0.85 + rng.nextDouble() * 0.3;
-      return _NeoMock(
-        id: '${seed.designation}-$date',
-        designation: seed.designation,
-        diameterMeters: (seed.diameterMeters * jitter).round(),
-        velocityKps: double.parse(
-          (seed.velocityKps * jitter).toStringAsFixed(2),
-        ),
-        missDistanceAu: double.parse(
-          (seed.missDistanceAu * jitter).toStringAsFixed(5),
-        ),
-        magnitude: seed.magnitude,
-        hazardous: seed.hazardous,
-        approachTime:
-            '${10 + rng.nextInt(13)}:${rng.nextInt(60).toString().padLeft(2, '0')} UTC',
-      );
-    }).toList();
   }
 
   Widget _detailRow(String label, String value) {
@@ -296,98 +302,6 @@ class _TelescopeScreenState extends State<TelescopeScreen> {
       ],
     );
   }
-}
-
-// ---------- Mock data ----------
-
-class _NeoSeed {
-  const _NeoSeed({
-    required this.designation,
-    required this.diameterMeters,
-    required this.velocityKps,
-    required this.missDistanceAu,
-    required this.magnitude,
-    required this.hazardous,
-  });
-  final String designation;
-  final int diameterMeters;
-  final double velocityKps;
-  final double missDistanceAu;
-  final double magnitude;
-  final bool hazardous;
-}
-
-const _catalogue = <_NeoSeed>[
-  _NeoSeed(
-    designation: '99942 Apophis',
-    diameterMeters: 370,
-    velocityKps: 30.73,
-    missDistanceAu: 0.00021,
-    magnitude: 19.7,
-    hazardous: true,
-  ),
-  _NeoSeed(
-    designation: '101955 Bennu',
-    diameterMeters: 490,
-    velocityKps: 27.88,
-    missDistanceAu: 0.05210,
-    magnitude: 20.9,
-    hazardous: true,
-  ),
-  _NeoSeed(
-    designation: '2023 DZ2',
-    diameterMeters: 60,
-    velocityKps: 15.42,
-    missDistanceAu: 0.10400,
-    magnitude: 24.1,
-    hazardous: false,
-  ),
-  _NeoSeed(
-    designation: '3122 Florence',
-    diameterMeters: 4400,
-    velocityKps: 13.53,
-    missDistanceAu: 0.04723,
-    magnitude: 14.1,
-    hazardous: false,
-  ),
-  _NeoSeed(
-    designation: '1862 Apollo',
-    diameterMeters: 1500,
-    velocityKps: 21.10,
-    missDistanceAu: 0.02899,
-    magnitude: 16.3,
-    hazardous: false,
-  ),
-  _NeoSeed(
-    designation: '2001 FO32',
-    diameterMeters: 900,
-    velocityKps: 34.40,
-    missDistanceAu: 0.01340,
-    magnitude: 17.7,
-    hazardous: true,
-  ),
-];
-
-class _NeoMock {
-  const _NeoMock({
-    required this.id,
-    required this.designation,
-    required this.diameterMeters,
-    required this.velocityKps,
-    required this.missDistanceAu,
-    required this.magnitude,
-    required this.hazardous,
-    required this.approachTime,
-  });
-
-  final String id;
-  final String designation;
-  final int diameterMeters;
-  final double velocityKps;
-  final double missDistanceAu;
-  final double magnitude;
-  final bool hazardous;
-  final String approachTime;
 }
 
 // ---------- UI widgets ----------
@@ -707,7 +621,7 @@ class _NeoResultCard extends StatelessWidget {
     required this.onLongPress,
   });
 
-  final _NeoMock neo;
+  final Asteroid neo;
   final bool expanded;
   final bool flagged;
   final VoidCallback onTap;
@@ -770,16 +684,13 @@ class _NeoResultCard extends StatelessWidget {
                   Expanded(
                     child: _MetricCell(
                       label: 'VELOCITY',
-                      value: '${neo.velocityKps.toStringAsFixed(2)} km/s',
+                      value: neo.velocity,
                       valueColor: CosmosColors.primary,
                     ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
-                    child: _MetricCell(
-                      label: 'EST. DIA.',
-                      value: '${neo.diameterMeters} m',
-                    ),
+                    child: _MetricCell(label: 'EST. DIA.', value: neo.diameter),
                   ),
                 ],
               ),
@@ -804,8 +715,7 @@ class _NeoResultCard extends StatelessWidget {
                               ),
                             ),
                             TextSpan(
-                              text:
-                                  '${neo.missDistanceAu.toStringAsFixed(5)} AU',
+                              text: neo.missDistance,
                               style: CosmosTextStyles.dataMono(),
                             ),
                           ],
@@ -831,11 +741,11 @@ class _NeoResultCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      _ExpandedRow(label: 'MAGNITUDE', value: neo.magnitude),
                       _ExpandedRow(
-                        label: 'MAGNITUDE',
-                        value: neo.magnitude.toStringAsFixed(1),
+                        label: 'APPROACH',
+                        value: neo.closeApproach ?? '—',
                       ),
-                      _ExpandedRow(label: 'APPROACH', value: neo.approachTime),
                       if (flagged)
                         _ExpandedRow(
                           label: 'STATUS',

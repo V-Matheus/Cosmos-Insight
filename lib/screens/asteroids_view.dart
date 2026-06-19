@@ -2,13 +2,16 @@ import 'package:flutter/material.dart';
 
 import '../models/asteroid.dart';
 import '../routes/app_routes.dart';
+import '../services/neo_service.dart';
 import '../theme/cosmos_theme.dart';
 import '../widgets/asteroid_card.dart';
+import '../widgets/glass_panel.dart';
 import '../widgets/telemetry_overview.dart';
 import 'asteroid_filter_screen.dart';
 
-/// Root screen of the ASTEROIDS tab. It drives two of the navigation
-/// requirements from inside its own nested navigator:
+/// Root screen of the ASTEROIDS tab. It loads the live NEO catalogue from
+/// NASA's NeoWs browse endpoint and drives two of the navigation requirements
+/// from inside its own nested navigator:
 ///
 ///  * Tapping a card -> `pushNamed(asteroidDetail, arguments: asteroid)`  (4)
 ///  * Tapping FILTER -> `await pushNamed(asteroidFilter)` then reads the
@@ -21,11 +24,50 @@ class AsteroidsView extends StatefulWidget {
 }
 
 class _AsteroidsViewState extends State<AsteroidsView> {
+  final NeoService _service = NeoService();
+
   AsteroidStatus? _filter;
 
+  bool _loading = true;
+  String? _error;
+  List<Asteroid> _asteroids = const [];
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  @override
+  void dispose() {
+    _service.dispose();
+    super.dispose();
+  }
+
+  Future<void> _load() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final asteroids = await _service.browse();
+      if (!mounted) return;
+      setState(() {
+        _asteroids = asteroids;
+        _loading = false;
+      });
+    } on Object catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e.toString();
+        _loading = false;
+      });
+    }
+  }
+
   List<Asteroid> get _visible => _filter == null
-      ? kAsteroids
-      : kAsteroids.where((a) => a.status == _filter).toList();
+      ? _asteroids
+      : _asteroids.where((a) => a.status == _filter).toList();
 
   void _openDetail(Asteroid asteroid) {
     // Requirement (4): pass the object as the route's arguments.
@@ -59,6 +101,16 @@ class _AsteroidsViewState extends State<AsteroidsView> {
     return 1;
   }
 
+  /// Closest approach across the whole loaded catalogue, formatted for the
+  /// telemetry panel ('—' until data is available).
+  String get _closestApproach {
+    if (_asteroids.isEmpty) return '—';
+    final closest = _asteroids
+        .map((a) => a.missDistanceAu)
+        .reduce((a, b) => a < b ? a : b);
+    return '${closest.toStringAsFixed(5)} AU';
+  }
+
   @override
   Widget build(BuildContext context) {
     final visible = _visible;
@@ -73,9 +125,9 @@ class _AsteroidsViewState extends State<AsteroidsView> {
         Text('Near-Earth Objects', style: CosmosTextStyles.displayLg()),
         const SizedBox(height: 12),
         Text(
-          "Real-time telemetry and tracking data for high-velocity "
-          "celestial bodies in proximity to Earth's orbit. Tap an object for "
-          "its full briefing.",
+          "Live telemetry and tracking data for celestial bodies in proximity "
+          "to Earth's orbit, sourced from NASA's NeoWs catalogue. Tap an "
+          "object for its full briefing.",
           style: CosmosTextStyles.bodyMd(color: CosmosColors.onSurfaceVariant),
         ),
         const SizedBox(height: 24),
@@ -87,11 +139,20 @@ class _AsteroidsViewState extends State<AsteroidsView> {
               : () => setState(() => _filter = null),
         ),
         const SizedBox(height: 24),
-        const TelemetryOverview(),
+        TelemetryOverview(
+          trackedObjects: _loading ? '—' : '${_asteroids.length}',
+          closestApproach: _loading ? '—' : _closestApproach,
+        ),
         const SizedBox(height: 32),
-        if (visible.isEmpty)
+        if (_loading)
+          const _LoadingState()
+        else if (_error != null)
+          _ErrorState(message: _error!, onRetry: _load)
+        else if (visible.isEmpty)
           Text(
-            'No objects match this filter.',
+            _asteroids.isEmpty
+                ? 'No objects returned by the catalogue.'
+                : 'No objects match this filter.',
             style: CosmosTextStyles.bodyMd(
               color: CosmosColors.onSurfaceVariant,
             ),
@@ -136,6 +197,87 @@ class _AsteroidsViewState extends State<AsteroidsView> {
       rows.add(const SizedBox(height: 16));
     }
     return rows;
+  }
+}
+
+/// Loading placeholder shown while the NeoWs catalogue is being fetched.
+class _LoadingState extends StatelessWidget {
+  const _LoadingState();
+
+  @override
+  Widget build(BuildContext context) {
+    return GlassPanel(
+      padding: const EdgeInsets.symmetric(vertical: 40),
+      child: Column(
+        children: [
+          const SizedBox(
+            width: 28,
+            height: 28,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: CosmosColors.primaryContainer,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'LOADING CATALOGUE...',
+            style: CosmosTextStyles.labelCaps(
+              color: CosmosColors.onSurfaceVariant,
+              letterSpacing: 1.8,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Error panel with a retry affordance, shown when the NeoWs request fails.
+class _ErrorState extends StatelessWidget {
+  const _ErrorState({required this.message, required this.onRetry});
+
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return GlassPanel(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+      child: Column(
+        children: [
+          const Icon(
+            Icons.satellite_alt_outlined,
+            color: CosmosColors.error,
+            size: 40,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: CosmosTextStyles.bodyMd(
+              color: CosmosColors.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 20),
+          OutlinedButton.icon(
+            onPressed: onRetry,
+            icon: const Icon(Icons.refresh, size: 16),
+            label: Text(
+              'RETRY',
+              style: CosmosTextStyles.labelCaps(letterSpacing: 1.6),
+            ),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: CosmosColors.primaryContainer,
+              side: const BorderSide(color: CosmosColors.primaryContainer),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 12,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

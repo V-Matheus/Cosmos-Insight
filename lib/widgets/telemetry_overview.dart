@@ -4,7 +4,17 @@ import '../theme/cosmos_theme.dart';
 import 'glass_panel.dart';
 
 class TelemetryOverview extends StatelessWidget {
-  const TelemetryOverview({super.key});
+  const TelemetryOverview({
+    super.key,
+    this.trackedObjects = '—',
+    this.closestApproach = '—',
+  });
+
+  /// Number of objects currently loaded in the catalogue.
+  final String trackedObjects;
+
+  /// Closest approach across the loaded catalogue (e.g. '0.00021 AU').
+  final String closestApproach;
 
   @override
   Widget build(BuildContext context) {
@@ -47,14 +57,14 @@ class TelemetryOverview extends StatelessWidget {
               Expanded(
                 child: _Metric(
                   label: 'TRACKED OBJECTS',
-                  value: '1,204',
+                  value: trackedObjects,
                   valueColor: CosmosColors.onSurface,
                 ),
               ),
               Expanded(
                 child: _Metric(
                   label: 'CLOSEST APPROACH',
-                  value: '0.02 AU',
+                  value: closestApproach,
                   valueColor: CosmosColors.error,
                 ),
               ),

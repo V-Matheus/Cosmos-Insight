@@ -1,4 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Required to reach the NASA public APIs over the network. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="untitled"
         android:name="${applicationName}"
